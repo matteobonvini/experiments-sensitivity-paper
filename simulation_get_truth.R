@@ -1,0 +1,71 @@
+###############################################
+## Compute truth for simulation of Section 5 ##
+###############################################
+rm(list = ls())
+
+set.seed(1000)
+
+library(pbapply)
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+source("true_regression_functions_simulation.R")
+
+
+# For the simulation it's important that eps_seq is a subset of eps0_seq
+# this saves computational time. See simulation.R file.
+eps_seq <- seq(0, 0.2, 0.01)
+eps0_seq <- seq(0, 0.2, 0.001)
+
+nsim <- 500
+col_names <- c("eps", "lb", "ub", "eps_zero")
+
+# Simulate data to estimate term E{g * I(g <= q)} as sample average
+sim_fun <- function() {
+  
+  x1vals <- rtruncnorm(1e4, xlb, xub)
+  x2vals <- rtruncnorm(1e4, xlb, xub)
+  gub <- gx(x1vals, x2vals)
+  glb <- gub - 1
+  
+  quants_lb <- quantile(glb, eps_seq)
+  quants_ub <- quantile(gub, 1-eps_seq)
+  quants_lb0 <- quantile(glb, eps0_seq)
+  
+  g_term_lb <- get_g_term(g = glb, quants = quants_lb, upper = FALSE)
+  g_term_ub <- get_g_term(g = gub, quants = quants_ub, upper = TRUE)
+  g_term_lb0 <- get_g_term(g = glb, quants = quants_lb0, upper = FALSE)
+  
+  true_lb <- mu1 - mu0 + g_term_lb
+  true_ub <- mu1 - mu0 + g_term_ub
+  true_lb0 <- mu1 - mu0 + g_term_lb0
+  true_eps0 <- eps0_seq[which.min(abs(true_lb0))]
+  
+  out <- matrix(c(eps_seq, true_lb, true_ub, rep(true_eps0, length(eps_seq))),
+                ncol = length(col_names), nrow = length(eps_seq), 
+                dimnames = list(NULL, col_names))
+  return(out)
+}
+
+res <- pbreplicate(nsim, sim_fun())
+out <- apply(res, c(1, 2), mean)
+sds <- apply(res, c(1, 2), sd) / sqrt(nsim)
+# plot(out[, 1], out[, 3], type = "l", ylim = c(-0.2, 0.2))
+# lines(out[, 1], out[, 2])
+# 
+# x1vals <- rtruncnorm(5e6, xlb, xub)
+# x2vals <- rtruncnorm(5e6, xlb, xub)
+# gub <- gx(x1vals, x2vals)
+# plot(density(gub))
+# max(density(gub)$y)
+# plot(density(pix(x1vals)))
+# plot(density(mu1x(x1vals, x2vals)))
+# plot(density(mu0x(x1vals, x2vals)))
+
+attr(out, "tau") <- tau
+attr(out, "pi") <- pi1
+attr(out, "mu0") <- mu0
+attr(out, "mu1") <- mu1
+attr(out, "eps0_seq") <- eps0_seq
+attr(out, "eps_seq") <- eps_seq
+saveRDS(out, file = "./data/truth_simulation.RData")
