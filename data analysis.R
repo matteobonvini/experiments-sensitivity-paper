@@ -1,13 +1,14 @@
 # URL http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/rhc.html
 # Read dataset into R
-# rm(list = ls())
+rm(list = ls())
 setwd("C:/Users/matte/Dropbox/Causal questions shared with Matteo/Sensitivity Analysis")
 library(devtools)
 devtools::install("C:/Users/matte/Desktop/sensAteBounds")
 library(sensAteBounds)
 library(varhandle)
 set.seed(1000)
-dat <- read.csv("./experiments/data/rhc.csv", header=TRUE)
+dat <- read.csv("http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/rhc.csv", 
+                header=TRUE)
 
 covariates <- c("age", "sex", "race", "edu", "income",
                 
