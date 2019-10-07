@@ -4,7 +4,7 @@ set.seed(1000)
 
 library(pbapply)
 library(devtools)
-devtools::install(repo = "C:/Users/matte/Desktop/sensAteBounds")
+devtools::install("C:/Users/matte/Desktop/sensAteBounds")
 library(sensAteBounds)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -29,12 +29,13 @@ sim_fn <- function(n) {
   x <- df[, c("x1", "x2")]
   
   # estimate the nuisance regression functios
-  nuis_fns <- do_crossfit(y=y, a=a, x=x, nsplits=2, 
-                          outfam=binomial(), treatfam=binomial(), sl.lib=sl.lib)
+  nuis_fns <- do_crossfit(y = y, a = a, x = x, nsplits = 2, outfam = binomial(),
+                          treatfam = binomial(), sl.lib = sl.lib)
   
-  res <- get_bound(y=y, a=a, x=x, outfam=NULL, treatfam=NULL, model="x", 
-                   eps=eps0_seq, delta=1, nsplits=NULL, do_mult_boot=FALSE, 
-                   do_eps_zero=TRUE, nuis_fns=nuis_fns, alpha=alpha)
+  res <- get_bound(y = y, a = a, x = x, outfam = NULL, treatfam = NULL, 
+                   model = "x", eps = eps0_seq, delta = 1, nsplits = NULL, 
+                   do_mult_boot = FALSE, do_eps_zero = TRUE, 
+                   nuis_fns = nuis_fns, alpha = alpha)
   bounds <- res$bounds
   
   # select subset of esp0_seq where to evaluate the bounds curves
@@ -103,4 +104,5 @@ for (i in 1:length(n)) {
   saveRDS(sims, file=paste0("./results/simulation/sims", n[i], ".RData"))
   saveRDS(res, file=paste0("./results/simulation/sim_res", n[i], ".RData"))
 }
+
 saveRDS(res, file=paste0("./results/simulation/sim_res.RData"))
