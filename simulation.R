@@ -5,6 +5,8 @@ set.seed(1000)
 library(pbapply)
 library(devtools)
 devtools::install("C:/Users/matte/Desktop/sensAteBounds")
+setwd("C:/Users/matte/Desktop/sensAteBounds")
+devtools::test()
 library(sensAteBounds)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -37,7 +39,7 @@ sim_fn <- function(n) {
                    do_mult_boot = FALSE, do_eps_zero = TRUE, 
                    nuis_fns = nuis_fns, alpha = alpha)
   bounds <- res$bounds
-  
+  eps_zero <- res$eps_zero
   # select subset of esp0_seq where to evaluate the bounds curves
   idx <- which(round(bounds$eps, 10) %in% round(eps_seq, 10))
   
@@ -67,10 +69,11 @@ sim_fn <- function(n) {
   
   cnames <- c("eps", "n", "lb", "ub", "eps_zero", "ci_lo", "ci_lb_hi",
               "ci_ub_lo", "ci_hi", "eps_zero_lo", "eps_zero_hi")
-  out <- c(bounds$eps[idx], rep(n, length(bounds$eps[idx])), lb, ub, 
-           bounds$eps_zero[idx], ci_lb[, 1], ci_lb[, 2], ci_ub[, 1], ci_ub[, 2], 
-           bounds$eps_zero_lo[idx], bounds$eps_zero_hi[idx])
-  out <- matrix(out, ncol = length(cnames), nrow = length(bounds$eps[idx]),
+  nidx <- length(bounds$eps[idx])
+  out <- c(bounds$eps[idx], rep(n, nidx), lb, ub, rep(eps_zero$eps_zero, nidx),
+           ci_lb[, 1], ci_lb[, 2], ci_ub[, 1], ci_ub[, 2], 
+           rep(eps_zero$eps_zero_lo, nidx), rep(eps_zero$eps_zero_hi, nidx))
+  out <- matrix(out, ncol = length(cnames), nrow = nidx, 
                 dimnames = list(NULL, cnames))
   return(out)
 }

@@ -42,7 +42,6 @@ a <- ifelse(dat$swang1 == "No RHC", 0, 1)
 y <- ifelse(dat$dth30 == "No", 1, 0)
 
 eps_seq <- seq(0, 0.2, 0.01)
-delta_seq <- 1
 model <- c("x", "xa")
 sl.lib <- c("SL.mean", "SL.speedlm", "SL.speedglm", "SL.gam", 
             "SL.ranger", "SL.polymars", "SL.svm")
@@ -53,10 +52,9 @@ saveRDS(nuis_fns, file = "./results/nuis_fns_rhc.RData")
 bounds <- NULL
 for(mm in model) {
   res <- get_bound(y=y, a=a, x=x, outfam=NULL, treatfam=NULL, 
-                   model=mm, eps=eps_seq, delta=delta_seq, nsplits=NULL, 
+                   model=mm, eps=eps_seq, delta=1, nsplits=NULL, 
                    do_mult_boot=TRUE, do_eps_zero=TRUE,
                    nuis_fns=nuis_fns, alpha=0.05, B=10000)
-  bounds_next <- res$bounds
   bounds_next <- data.frame(epsilon=res$bounds$eps, delta=res$bounds$delta, 
                             lb=res$bounds$lb, ub=res$bounds$ub, 
                             ci_lo=res$bounds$ci_lo, ci_hi=res$bounds$ci_hi,
@@ -66,9 +64,9 @@ for(mm in model) {
                             ci_hi_ptw_im04=res$bounds$ci_hi_ptwise_im04,
                             length_bound=res$bounds$ub-res$bounds$lb, 
                             no_zero=res$bound$no_zero,
-                            eps_zero=res$bounds$eps_zero,
-                            eps_zero_lo=res$bounds$eps_zero_lo,
-                            eps_zero_hi=res$bounds$eps_zero_hi)
+                            eps_zero=res$eps_zero$est,
+                            eps_zero_lo=res$eps_zero$ci_lo,
+                            eps_zero_hi=res$eps_zero$ci_hi)
   bounds_next$model <- mm
   bounds <- rbind(bounds, bounds_next)
 }
