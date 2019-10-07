@@ -1,14 +1,13 @@
+##################################################################
+## Generate plot of the bounds for data of Connors et al (1996) ##
+##################################################################
 rm(list = ls())
-
-library(RColorBrewer)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("plot_theme.R")
 
-plotsize <- function(x,y) options(repr.plot.width=x, repr.plot.height=y)
-plotsize(10, 10)
+options(repr.plot.width = 10, repr.plot.height = 10)
 
-colors <- brewer.pal(8, "Set2")
 colors <- c("#E69F00", "#56B4E9")
 
 dat <- read.csv("./results/data analysis/rhc_bounds.csv")

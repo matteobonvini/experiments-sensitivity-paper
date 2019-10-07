@@ -1,3 +1,6 @@
+####################################
+## Run simulation as in Section 5 ##
+####################################
 rm(list = ls())
 
 set.seed(1000)
@@ -5,12 +8,12 @@ set.seed(1000)
 library(pbapply)
 library(devtools)
 devtools::install("C:/Users/matte/Desktop/sensAteBounds")
-setwd("C:/Users/matte/Desktop/sensAteBounds")
-devtools::test()
+# setwd("C:/Users/matte/Desktop/sensAteBounds")
+# devtools::test()
 library(sensAteBounds)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("true_regression_functions_simulation.R")
+source("simulation_true_regression_functions.R")
 
 ## Load true values ##
 truth <- readRDS("./data/truth_simulation.RData")
@@ -40,6 +43,7 @@ sim_fn <- function(n) {
                    nuis_fns = nuis_fns, alpha = alpha)
   bounds <- res$bounds
   eps_zero <- res$eps_zero
+  
   # select subset of esp0_seq where to evaluate the bounds curves
   idx <- which(round(bounds$eps, 10) %in% round(eps_seq, 10))
   
@@ -70,9 +74,9 @@ sim_fn <- function(n) {
   cnames <- c("eps", "n", "lb", "ub", "eps_zero", "ci_lo", "ci_lb_hi",
               "ci_ub_lo", "ci_hi", "eps_zero_lo", "eps_zero_hi")
   nidx <- length(bounds$eps[idx])
-  out <- c(bounds$eps[idx], rep(n, nidx), lb, ub, rep(eps_zero$eps_zero, nidx),
+  out <- c(bounds$eps[idx], rep(n, nidx), lb, ub, rep(eps_zero$est, nidx),
            ci_lb[, 1], ci_lb[, 2], ci_ub[, 1], ci_ub[, 2], 
-           rep(eps_zero$eps_zero_lo, nidx), rep(eps_zero$eps_zero_hi, nidx))
+           rep(eps_zero$ci_lo, nidx), rep(eps_zero$ci_hi, nidx))
   out <- matrix(out, ncol = length(cnames), nrow = nidx, 
                 dimnames = list(NULL, cnames))
   return(out)

@@ -9,7 +9,7 @@ library(pbapply)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-source("true_regression_functions_simulation.R")
+source("simulation_true_regression_functions.R")
 
 
 # For the simulation it's important that eps_seq is a subset of eps0_seq
@@ -48,19 +48,11 @@ sim_fun <- function() {
 }
 
 res <- pbreplicate(nsim, sim_fun())
+# The truth is the average of the results across simulations
 out <- apply(res, c(1, 2), mean)
+# Sanity check that the variance of the results across simulations is not large
 sds <- apply(res, c(1, 2), sd) / sqrt(nsim)
-# plot(out[, 1], out[, 3], type = "l", ylim = c(-0.2, 0.2))
-# lines(out[, 1], out[, 2])
-# 
-# x1vals <- rtruncnorm(5e6, xlb, xub)
-# x2vals <- rtruncnorm(5e6, xlb, xub)
-# gub <- gx(x1vals, x2vals)
-# plot(density(gub))
-# max(density(gub)$y)
-# plot(density(pix(x1vals)))
-# plot(density(mu1x(x1vals, x2vals)))
-# plot(density(mu0x(x1vals, x2vals)))
+print(sds)
 
 attr(out, "tau") <- tau
 attr(out, "pi") <- pi1
