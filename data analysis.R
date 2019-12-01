@@ -7,9 +7,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 library(devtools)
 library(varhandle)
-# Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS=TRUE)
-# devtools::install_github("matteobonvini/sensitivitypuc")
-# devtools::install("C:/Users/matte/Desktop/sensitivitypuc")
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = TRUE)
+devtools::install_github("matteobonvini/sensitivitypuc")
 library(sensitivitypuc)
 
 set.seed(1000)
@@ -72,8 +71,8 @@ nuis_fns <- do_crossfit(y = y, a = a, x = x, ymin = 0, ymax = 1, nsplits = 5,
                         outfam = binomial(), treatfam = binomial(),
                         sl.lib = sl.lib, do_parallel = TRUE, ncluster = 3,
                         show_progress = FALSE)
-# saveRDS(nuis_fns, file = "./results/nuis_fns_rhc.RData")
-# nuis_fns <- readRDS("./results/nuis_fns_rhc.RData")
+# saveRDS(nuis_fns, file = "./results/data analysis/nuis_fns_rhc.RData")
+# nuis_fns <- readRDS("./results/data analysis/nuis_fns_rhc.RData")
 
 res_x <- get_bound(y = y, a = a, x = x, ymin = 0, ymax = 1, model = "x", 
                    eps = eps_seq, delta = delta_seq, nuis_fns = nuis_fns, 
