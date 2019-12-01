@@ -1,5 +1,5 @@
 ###################################################
-# True regression functions for DAP of Simulation #
+# True regression functions for DGP of Simulation #
 ###################################################
 require(truncnorm)
 require(cubature)
@@ -59,7 +59,7 @@ mu1x <- function(x1, x2) {
   return((1-pu_x(x1))*u0 + pu_x(x1)*u1)
 }
 
-# g(eta) = pi(x)*mu0(x) + (1-pi(x))*(1-mu1(x))
+# g(eta) = pi(x)*mu0(x) + (1-pi(x))*(1-mu1(x)), uses worst-case delta = 1
 gx <- function(x1, x2) {
   return((1-pix(x1))*(1-mu1x(x1, x2)) + pix(x1)*mu0x(x1, x2))
 }

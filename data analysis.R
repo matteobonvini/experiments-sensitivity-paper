@@ -4,15 +4,17 @@
 rm(list = ls())
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 library(devtools)
-devtools::install("C:/Users/matte/Desktop/sensAteBounds")
-library(sensAteBounds)
 library(varhandle)
+# Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS=TRUE)
+# devtools::install_github("matteobonvini/sensitivitypuc")
+# devtools::install("C:/Users/matte/Desktop/sensitivitypuc")
+library(sensitivitypuc)
 
 set.seed(1000)
-# Reference: http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/rhc.html
-dat <- read.csv("http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/rhc.csv", 
-                header = TRUE)
+data_url <- "http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/rhc.csv"
+dat <- read.csv(data_url, header = TRUE)
 
 covariates <- c("age", "sex", "race", "edu", "income", 
                 "ninsclas", "cat1", "cat2", 
@@ -31,7 +33,7 @@ covariates <- c("age", "sex", "race", "edu", "income",
 # Exclude covariates with missing values
 x <- dat[, covariates]
 miss_covs <- covariates[apply(x, 2, function(x) sum(is.na(x)) > 0)]
-print(miss_covs)
+print(paste("Discarding covariates:", paste(miss_covs, collapse = ", ")))
 x <- x[, !covariates %in% miss_covs]
 
 # Fix factors or otherwise SuperLearner complains
@@ -55,43 +57,57 @@ a <- ifelse(dat$swang1 == "No RHC", 0, 1)
 y <- ifelse(dat$dth30 == "No", 1, 0)
 
 # Select values for prop of unmeasured confounding at which evaluate bounds
-eps_seq <- seq(0, 0.2, 0.001)
+eps_seq <- seq(0, 0.6, 0.0001)
+delta_seq <- c(0.25, 0.50, 0.75, 1)
 # Select model, "x" = S \ind (Y, A) | X, "xa" = S \ind Y | (X, A) 
 model <- c("x", "xa")
 
 # Select SuperLearner Library
-sl.lib <- c("SL.mean", "SL.speedlm", "SL.speedglm", "SL.gam", 
+sl.lib <- c("SL.mean", "SL.speedlm", "SL.speedglm", "SL.gam",
             "SL.ranger", "SL.polymars", "SL.svm")
 # Estimate Regression functions once for both model "x" and model "xa"
 # There is a "non-list contrasts argument ignored" warning from SL gam library
 # coming from model.matrix, which I think can be ignored. 
-nuis_fns <- do_crossfit(y = y, a = a, x = x, nsplits = 5, outfam = binomial(),
-                        treatfam = binomial(), sl.lib = sl.lib)
-saveRDS(nuis_fns, file = "./results/nuis_fns_rhc.RData")
-nuis_fns <- readRDS("./results/nuis_fns_rhc.RData")
-bounds <- NULL
-for(mm in model) {
-  # Loop thru models and evaluate bounds curves
-  res <- get_bound(y=y, a=a, x=x, outfam=NULL, treatfam=NULL, 
-                   model=mm, eps=eps_seq, delta=1, nsplits=NULL, 
-                   do_mult_boot=TRUE, do_eps_zero=TRUE,
-                   nuis_fns=nuis_fns, alpha=0.05, B=10000)
-  bounds_next <- data.frame(epsilon=res$bounds$eps, delta=res$bounds$delta, 
-                            lb=res$bounds$lb, ub=res$bounds$ub, 
-                            ci_lo=res$bounds$ci_lo, ci_hi=res$bounds$ci_hi,
-                            ci_lo_ptw=res$bounds$ci_lo_ptwise, 
-                            ci_hi_ptw=res$bounds$ci_hi_ptwise,
-                            ci_lo_ptw_im04=res$bounds$ci_lo_ptwise_im04, 
-                            ci_hi_ptw_im04=res$bounds$ci_hi_ptwise_im04,
-                            length_bound=res$bounds$ub-res$bounds$lb, 
-                            no_zero=res$bound$no_zero,
-                            eps_zero=res$eps_zero$est,
-                            eps_zero_lo=res$eps_zero$ci_lo,
-                            eps_zero_hi=res$eps_zero$ci_hi)
-  bounds_next$model <- mm
-  bounds <- rbind(bounds, bounds_next)
-}
+nuis_fns <- do_crossfit(y = y, a = a, x = x, ymin = 0, ymax = 1, nsplits = 5,
+                        outfam = binomial(), treatfam = binomial(),
+                        sl.lib = sl.lib, do_parallel = TRUE, ncluster = 3,
+                        show_progress = FALSE)
+# saveRDS(nuis_fns, file = "./results/nuis_fns_rhc.RData")
+# nuis_fns <- readRDS("./results/nuis_fns_rhc.RData")
 
-write.csv(bounds, "./results/data analysis/rhc_bounds.csv", row.names = FALSE)
+res_x <- get_bound(y = y, a = a, x = x, ymin = 0, ymax = 1, model = "x", 
+                   eps = eps_seq, delta = delta_seq, nuis_fns = nuis_fns, 
+                   alpha = 0.05, B = 10000, do_mult_boot = TRUE,
+                   do_parallel = FALSE, do_eps_zero = TRUE, do_rearrange = TRUE)
+
+res_xa <- get_bound(y = y, a = a, x = x, ymin = 0, ymax = 1, model = "xa", 
+                    eps = eps_seq, delta = delta_seq, nuis_fns = nuis_fns, 
+                    alpha = 0.05, B = 10000, do_mult_boot = TRUE,
+                    do_parallel = FALSE, do_eps_zero = TRUE, 
+                    do_rearrange = TRUE)
+
+bound_x <- res_x$bounds
+bound_xa <- res_xa$bounds
+eps_zero_x <- res_x$eps_zero
+eps_zero_xa <- res_xa$eps_zero   
+
+# Export result in a user-friendly format
+out <- NULL
+for(i in 1:length(delta_seq)) {
+  # Loop through the values of deltas and append
+  dd <- delta_seq[i]
+  bound_x <- cbind(eps_seq, dd, res_x$bounds[, , as.character(dd)], 
+                   eps_zero_x$est[i], eps_zero_x$ci_lo[i], eps_zero_x$ci_hi[i], 
+                   "x")
+  bound_xa <- cbind(eps_seq, dd, res_xa$bounds[, , as.character(dd)], 
+                    eps_zero_xa$est[i], eps_zero_xa$ci_lo[i], 
+                    eps_zero_xa$ci_hi[i], "xa")
+  bound <- rbind(bound_x, bound_xa)
+  out <- rbind(out, bound)
+}
+colnames(out) <- c("epsilon", "delta", colnames(res_x$bounds[, , 1]), 
+                   "eps_zero", "eps_zero_lo", "eps_zero_hi", "model")
+write.csv(out, "./results/data analysis/rhc_bounds.csv", row.names = FALSE)
+
 
 
