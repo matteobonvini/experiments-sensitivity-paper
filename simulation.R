@@ -9,8 +9,6 @@ set.seed(1000)
 
 # Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = TRUE)
 # devtools::install_github("matteobonvini/sensitivitypuc")
-devtools::install("C:/Users/matte/Desktop/sensitivitypuc")
-
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("simulation_true_regression_functions.R")
@@ -24,8 +22,9 @@ eps0_seq <- attributes(truth)$eps0_seq
 
 # SuperLearner library
 sl.lib <- c("SL.mean", "SL.glm", "SL.glm.interaction", "SL.gam")
-nsim <- 500
+nsim <- 10
 n <- rev(c(500, 1000, 5000, 10000))
+n <- 500
 alpha <- 0.05
 
 sim_fn <- function(n) {
@@ -114,10 +113,10 @@ for (i in 1:length(n)) {
 
   print(res[1:i, ])
   
-  saveRDS(sims, file=paste0("./results/simulation/sims", n[i], ".RData"))
-  saveRDS(res, file=paste0("./results/simulation/sim_res", n[i], ".RData"))
+  # saveRDS(sims, file=paste0("./results/simulation/sims", n[i], ".RData"))
+  # saveRDS(res, file=paste0("./results/simulation/sim_res", n[i], ".RData"))
 }
 
-saveRDS(res, file=paste0("./results/simulation/sim_res.RData"))
+# saveRDS(res, file=paste0("./results/simulation/sim_res.RData"))
 
 # print(round(readRDS(paste0("./results/simulation/sim_res.RData")), 2))
