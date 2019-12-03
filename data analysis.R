@@ -7,11 +7,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 library(devtools)
 library(varhandle)
-Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = TRUE)
-devtools::install_github("matteobonvini/sensitivitypuc")
 library(sensitivitypuc)
 
 set.seed(1000)
+
 data_url <- "http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/rhc.csv"
 dat <- read.csv(data_url, header = TRUE)
 
@@ -61,6 +60,9 @@ delta_seq <- c(0.25, 0.50, 0.75, 1)
 # Select model, "x" = S \ind (Y, A) | X, "xa" = S \ind Y | (X, A) 
 model <- c("x", "xa")
 
+# Select confidence level and # rademachers for multiplier bootstrap
+alpha <- 0.05
+B <- 10000
 # Select SuperLearner Library
 sl.lib <- c("SL.mean", "SL.speedlm", "SL.speedglm", "SL.gam",
             "SL.ranger", "SL.polymars", "SL.svm")
@@ -76,14 +78,13 @@ nuis_fns <- readRDS("./results/data analysis/nuis_fns_rhc.RData")
 
 res_x <- get_bound(y = y, a = a, x = x, ymin = 0, ymax = 1, model = "x", 
                    eps = eps_seq, delta = delta_seq, nuis_fns = nuis_fns, 
-                   alpha = 0.05, B = 10000, do_mult_boot = TRUE,
-                   do_parallel = FALSE, do_eps_zero = TRUE, do_rearrange = TRUE)
+                   alpha = alpha, B = B, do_mult_boot = TRUE,
+                   do_eps_zero = TRUE, do_rearrange = TRUE)
 
 res_xa <- get_bound(y = y, a = a, x = x, ymin = 0, ymax = 1, model = "xa", 
                     eps = eps_seq, delta = delta_seq, nuis_fns = nuis_fns, 
-                    alpha = 0.05, B = 10000, do_mult_boot = TRUE,
-                    do_parallel = FALSE, do_eps_zero = TRUE, 
-                    do_rearrange = TRUE)
+                    alpha = alpha, B = B, do_mult_boot = TRUE,
+                    do_eps_zero = TRUE, do_rearrange = TRUE)
 
 bound_x <- res_x$bounds
 bound_xa <- res_xa$bounds
@@ -107,6 +108,3 @@ for(i in 1:length(delta_seq)) {
 colnames(out) <- c("epsilon", "delta", colnames(res_x$bounds[, , 1]), 
                    "eps_zero", "eps_zero_lo", "eps_zero_hi", "model")
 write.csv(out, "./results/data analysis/rhc_bounds.csv", row.names = FALSE)
-
-
-
