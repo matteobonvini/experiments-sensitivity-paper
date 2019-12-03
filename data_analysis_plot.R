@@ -20,33 +20,29 @@ models <- c("x", "xa")
 colors_x <- brewer.pal(4, "YlOrRd")
 colors_xa <- brewer.pal(4, "Blues")
 
-eps0_label_fn <- function(dat, delta) {
+eps0_label_fn <- function(dat, delta, round_digit = 2) {
   # Return value for estimate of eps0 for a given delta, dat must be data.frame
   # that results from get_bound() function. 
-  out <- round(dat[dat$delta == delta, ]$eps_zero[1], 2)
+  out <- round(dat[dat$delta == delta, ]$eps_zero[1], round_digit)
   return(out)
 }
 
 unconfound_val <- round(dat$lb[dat$epsilon == 0][1], 3)
 unconfound_label <- as.character(unconfound_val * 100)
 
-eps0_xa_label <- as.character(eps0_label_fn(datxa, 1) * 100)
-eps0_x_label <- as.character(eps0_label_fn(datx, 1) * 100)
-
 for(mm in models) {
   ## Generate plots for Figure 1, eps in [0, 0.5], delta = 1.
   dat_mm <- dat[dat$model == mm & dat$delta == 1 & dat$epsilon <= 0.5, ]
+  
+  eps0_label <- as.character(eps0_label_fn(dat_mm, 1, 3) * 100)
   xaxis_breaks <- c(0, dat_mm$eps_zero[1], 0.20, 0.30, 0.50)
-
   ytitle <- ifelse(mm == "x", "Difference in survival (%)", "")
 
   if(mm == "x") { 
     colors <- colors_x 
-    eps0_label <- eps0_x_label
     }
   if(mm == "xa") { 
     colors <- colors_xa
-    eps0_label <- eps0_xa_label
   }
   
   xaxis_labs <- c(0, eps0_label, 20, 30, 50)
@@ -96,6 +92,8 @@ for(mm in models) {
 }
 
 ## Superimposing the two plots
+eps0_x_label <- as.character(eps0_label_fn(datx, 1, 2) * 100)
+eps0_xa_label <- as.character(eps0_label_fn(datxa, 1, 2) * 100)
 p2 <- ggplot() + 
   
   geom_ribbon(data = datxa, 
@@ -170,7 +168,7 @@ for(mm in models) {
   deltas <- sort(unique(dat_mm$delta))
   names(colors) <- deltas
   
-  eps0_vals <- sapply(deltas, eps0_label_fn, dat = dat_mm)
+  eps0_vals <- sapply(deltas, eps0_label_fn, dat = dat_mm, round_digit = 2)
   xaxis_breaks <- sort(c(0, eps0_vals[4], eps0_vals[3], eps0_vals[2], 0.25,
                        eps0_vals[1], 0.5))
   xaxis_labs <- as.character(xaxis_breaks * 100)

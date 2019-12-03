@@ -71,8 +71,7 @@ sl.lib <- c("SL.mean", "SL.speedlm", "SL.speedglm", "SL.gam",
 # coming from model.matrix, which I think can be ignored. 
 nuis_fns <- do_crossfit(y = y, a = a, x = x, ymin = 0, ymax = 1, nsplits = 5,
                         outfam = binomial(), treatfam = binomial(),
-                        sl.lib = sl.lib, do_parallel = TRUE, ncluster = 3,
-                        show_progress = FALSE)
+                        sl.lib = sl.lib, do_parallel = TRUE, ncluster = 3)
 saveRDS(nuis_fns, file = "./results/data analysis/nuis_fns_rhc.RData")
 nuis_fns <- readRDS("./results/data analysis/nuis_fns_rhc.RData")
 
