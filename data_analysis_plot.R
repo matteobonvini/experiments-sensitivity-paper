@@ -5,7 +5,6 @@ rm(list = ls())
 
 library(RColorBrewer)
 
-
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("plot_theme.R")
@@ -254,6 +253,6 @@ for(mm in models) {
     theme(legend.position = "none")
   filename <- paste0("./results/data analysis/rhc_bounds_epsilon_delta_", mm, 
                      ".pdf")
-  ggsave(filename = filename, p3, height = 3, width = 3)
+  ggsave(filename = filename, p3, height = 4, width = 4)
 }
 
