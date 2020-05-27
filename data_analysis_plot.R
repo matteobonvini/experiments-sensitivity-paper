@@ -10,8 +10,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("plot_theme.R")
 
 dat <- read.csv("./results/data analysis/rhc_bounds.csv")
-datx <- dat[dat$model == "x" & dat$delta == 1 & dat$epsilon <= 0.5, ]
-datxa <- dat[dat$model == "xa" & dat$delta == 1 & dat$epsilon <= 0.5, ]
+datx <- dat[dat$model == "x" & dat$delta == 1, ]
+datxa <- dat[dat$model == "xa" & dat$delta == 1, ]
 
 ylims <- c(-0.45, 0.32)
 models <- c("x", "xa")
@@ -34,7 +34,7 @@ for(mm in models) {
   dat_mm <- dat[dat$model == mm & dat$delta == 1 & dat$epsilon <= 0.5, ]
   
   eps0_label <- as.character(eps0_label_fn(dat_mm, 1, 3) * 100)
-  xaxis_breaks <- c(0, dat_mm$eps_zero[1], 0.20, 0.30, 0.50)
+  xaxis_breaks <- c(0, dat_mm$eps_zero[1], 0.10, 0.20, 0.30, 0.40, 0.50)
   ytitle <- ifelse(mm == "x", "Difference in survival (%)", "")
 
   if(mm == "x") { 
@@ -44,7 +44,7 @@ for(mm in models) {
     colors <- colors_xa
   }
   
-  xaxis_labs <- c(0, eps0_label, 20, 30, 50)
+  xaxis_labs <- c(0, eps0_label, 10, 20, 30, 40, 50)
   
   p <- ggplot() + 
     
@@ -86,7 +86,7 @@ for(mm in models) {
     our_theme + 
     theme(legend.position = "none")
   
-  ggsave(filename = paste0("./results/data analysis/rhc_bounds_epsilon_", mm, 
+  ggsave(filename = paste0("./results/data analysis/rhc_bounds_epsilon_", mm,
                            ".pdf"), p, height = 3, width = 3)
 }
 
@@ -168,20 +168,20 @@ for(mm in models) {
   names(colors) <- deltas
   
   eps0_vals <- sapply(deltas, eps0_label_fn, dat = dat_mm, round_digit = 2)
-  xaxis_breaks <- sort(c(0, eps0_vals[4], eps0_vals[3], eps0_vals[2], 0.25,
+  xaxis_breaks <- sort(c(0, eps0_vals[4], eps0_vals[3], eps0_vals[2],
                        eps0_vals[1], 0.5))
   xaxis_labs <- as.character(xaxis_breaks * 100)
   
   if(mm == "x") {
     colors <- rev(brewer.pal(4, "YlOrRd"))
     newcol <- "blue"
-    xaxis_col <- c("black", newcol, newcol, newcol, "black", newcol, "black")
+    xaxis_col <- c("black", newcol, newcol, newcol, newcol, "black")
     xaxis_bold <- ifelse(xaxis_col == "black", "plain" , "bold")
   } 
   if(mm == "xa")  {
     colors <- rev(brewer.pal(4, "Blues"))
     newcol <- "red"
-    xaxis_col <- c("black", newcol, newcol, newcol, "black", newcol, "black")
+    xaxis_col <- c("black", newcol, newcol, newcol, newcol, "black")
     xaxis_bold <- ifelse(xaxis_col == "black", "plain" , "bold")
   }
   

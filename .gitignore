@@ -1,3 +1,8 @@
 \.RDataTmp
 
 \results/data analysis/rhc_bounds_epsilon.pdf
+
+\results/data analysis/res_x_5fold.RData
+
+\results/data analysis/res_xa_5fold.RData
+
