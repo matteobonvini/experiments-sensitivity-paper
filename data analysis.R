@@ -1,15 +1,17 @@
-##########################################################
-## Analyze data of Connors et al (1996) as in Section 5 ##
-##########################################################
+############################################################
+## Analyze data of Connors et al (1996) as in Section 4.2 ##
+############################################################
 rm(list = ls())
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 library(varhandle)
 library(devtools)
-Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = TRUE) # if warnings are causing erros and they are not important one may use this
-devtools::install_github("matteobonvini/sensitivitypuc") 
+# Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = TRUE) # if warnings are causing erros and they are not important one may use this
+# devtools::install_github("matteobonvini/sensitivitypuc", force = TRUE)
 library(sensitivitypuc)
+
+options(stringsAsFactors = TRUE)
 
 set.seed(1000)
 
@@ -52,15 +54,15 @@ x <- cbind(x, missdat)
 # Fix factors or otherwise SuperLearner complains
 newdf <- x
 for(i in 1:ncol(x)) {
-  if(class(x[, i])=="factor") {
-    new <- to.dummy(x[, i], colnames(x)[i])
+  if(class(x[, i]) == "factor") {
+    tmp <- to.dummy(x[, i], colnames(x)[i])
     newdf <- newdf[, !colnames(newdf) %in% colnames(x)[i]]
-    newdf <- cbind(newdf, new[, -1, drop = FALSE])
+    newdf <- cbind(newdf, tmp[, -1, drop = FALSE])
   }
 }
 x <- newdf
 rm(newdf)
-rm(new)
+rm(tmp)
 
 # Avoid SuperLearner conflicts due to variable names
 colnames(x) <- paste("x", 1:ncol(x), sep = "")
@@ -69,7 +71,7 @@ a <- ifelse(dat$swang1 == "No RHC", 0, 1)
 # Y = 1 means survival at day 30
 y <- ifelse(dat$dth30 == "No", 1, 0)
 
-# unadjusted RR (using morality as outcome)
+# unadjusted OR (using morality as outcome)
 mean(y[a == 0]) / (1 - mean(y[a == 0])) * (1 - mean(y[a == 1])) / mean(y[a == 1]) 
 # unadjusted RD
 mean(y[a == 0]) - mean(y[a == 1])
@@ -90,15 +92,15 @@ nsplits <- 5
 # Estimate Regression functions once for both model "x" and model "xa"
 # There is a "non-list contrasts argument ignored" warning from SL gam library
 # coming from model.matrix, which I think can be ignored. 
-system.time({
-  nuis_fns <- do_crossfit(y = y, a = a, x = x, ymin = 0, ymax = 1,
-                          nsplits = nsplits, outfam = binomial(),
-                          treatfam = binomial(), sl.lib = sl.lib,
-                          do_parallel = TRUE, ncluster = 3)
-})
-rch_file_name <- paste0("./results/data analysis/nuis_fns_rhc_", nsplits, 
+# system.time({
+#   nuis_fns <- do_crossfit(y = y, a = a, x = x, ymin = 0, ymax = 1,
+#                           nsplits = nsplits, outfam = binomial(),
+#                           treatfam = binomial(), sl.lib = sl.lib,
+#                           do_parallel = TRUE, ncluster = 3)
+# })
+rch_file_name <- paste0("./results/data analysis/nuis_fns_rhc_", nsplits,
                         "fold.RData")
-saveRDS(nuis_fns, file = rch_file_name)
+# saveRDS(nuis_fns, file = rch_file_name)
 nuis_fns <- readRDS(rch_file_name)
 
 system.time({
@@ -115,19 +117,20 @@ res_xa <- get_bound(y = y, a = a, x = x, ymin = 0, ymax = 1, model = "xa",
                     do_eps_zero = TRUE, do_rearrange = TRUE)
 })
 
-saveRDS(res_x, file = paste0("./results/data analysis/res_x_", nsplits,
-                             "fold.RData"))
-saveRDS(res_xa, file = paste0("./results/data analysis/res_xa_", nsplits,
-                             "fold.RData"))
+# saveRDS(res_x, file = paste0("./results/data analysis/res_x_", nsplits,
+                             # "fold.RData"))
+# saveRDS(res_xa, file = paste0("./results/data analysis/res_xa_", nsplits,
+                             # "fold.RData"))
 
-res_x <- readRDS(paste0("./results/data analysis/res_x_", nsplits, "fold.RData"))
-res_xa <- readRDS(paste0("./results/data analysis/res_xa_", nsplits, "fold.RData"))
+# res_x <- readRDS(paste0("./results/data analysis/res_x_", nsplits, "fold.RData"))
+# res_xa <- readRDS(paste0("./results/data analysis/res_xa_", nsplits, "fold.RData"))
 
 bound_x <- res_x$bounds
 bound_xa <- res_xa$bounds
 eps_zero_x <- res_x$eps_zero
 eps_zero_xa <- res_xa$eps_zero   
 round(100 * bound_x[1, , "1"], 2)
+round(100 * bound_xa[1, , "1"], 2)
 round(100 * eps_zero_x, 2)
 round(100 * eps_zero_xa, 2)
 
