@@ -1,17 +1,13 @@
-####################################
-## Run simulation as in Section 5 ##
-####################################
+######################################
+## Run simulation as in Section 4.1 ##
+######################################
 rm(list = ls())
-library(devtools) 
-Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = TRUE) # if warnings are causing erros and they are not important one may use this
-devtools::install_github("matteobonvini/sensitivitypuc") 
 library(sensitivitypuc)
 
 set.seed(1000)
 
-library(sensitivitypuc)
-
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 source("simulation_true_regression_functions.R")
 
 ## Load true values ##

@@ -1,4 +1,4 @@
-# Design sensitivity
+# Design sensitivity (Section 7 in Supplementary materials)
 rm(list = ls())
 
 set.seed(1000)
